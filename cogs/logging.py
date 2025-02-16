@@ -1,26 +1,26 @@
+import discord
 from discord.ext import commands
 
-class Moderation(commands.Cog):
+class Logging(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    @commands.has_permissions(manage_messages=True)
-    async def clear(self, ctx, amount: int):
-        await ctx.channel.purge(limit=amount + 1)
-        await ctx.send(f"✅ Cleared {amount} messages", delete_after=5)
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        channel = discord.utils.get(member.guild.text_channels, name="welcome")
+        if channel:
+            await channel.send(f"👋 Welcome {member.mention} to {member.guild.name}!")
 
-    @commands.command()
-    @commands.has_permissions(kick_members=True)
-    async def kick(self, ctx, member: commands.MemberConverter, *, reason="No reason provided"):
-        await member.kick(reason=reason)
-        await ctx.send(f"👢 {member.mention} has been kicked. Reason: {reason}")
+    @commands.Cog.listener()
+    async def on_member_remove(self, member):
+        channel = discord.utils.get(member.guild.text_channels, name="goodbye")
+        if channel:
+            await channel.send(f"😢 {member.name} has left the server.")
 
-    @commands.command()
-    @commands.has_permissions(ban_members=True)
-    async def ban(self, ctx, member: commands.MemberConverter, *, reason="No reason provided"):
-        await member.ban(reason=reason)
-        await ctx.send(f"🔨 {member.mention} has been banned. Reason: {reason}")
+    @commands.Cog.listener()
+    async def on_message_edit(self, before, after):
+        if before.content != after.content:
+            await before.channel.send(f"✏️ **Message Edited**\n**Before:** {before.content}\n**After:** {after.content}")
 
 async def setup(bot):
-    await bot.add_cog(Moderation(bot))
+    await bot.add_cog(Logging(bot))
