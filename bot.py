@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import config
+import asyncio
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -15,9 +16,14 @@ async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     await bot.change_presence(activity=discord.Game(name="Managing your server!"))
 
-# Automatically load cogs
-for filename in os.listdir("./cogs"):
-    if filename.endswith(".py"):
-        bot.load_extension(f"cogs.{filename[:-3]}")
+async def load_cogs():
+    for filename in os.listdir("./cogs"):
+        if filename.endswith(".py"):
+            await bot.load_extension(f"cogs.{filename[:-3]}")  # ✅ Awaited
 
-bot.run(config.TOKEN)
+async def main():
+    async with bot:
+        await load_cogs()  # ✅ Load extensions before running the bot
+        await bot.start(config.TOKEN)  # ✅ Use bot.start instead of bot.run
+
+asyncio.run(main())
