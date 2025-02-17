@@ -25,3 +25,10 @@ jobs:
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
         run: python bot.py
+
+      - name: Send Deployment Notification to Discord
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"username": "GitHub Actions", "content": "🚀 **onWhisper-bot has been deployed!** \n✅ Commit: `${{ github.event.head_commit.message }}` \n🔗 Repo: [onWhisper-bot](https://github.com/KpnWorld/onWhisper-bot)"}' \
+               ${{ secrets.DISCORD_WEBHOOK }}
