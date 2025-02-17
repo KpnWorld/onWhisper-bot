@@ -48,8 +48,5 @@ class Moderation(commands.Cog):
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
         await interaction.response.send_message(f'{member} has 0 warnings.')
     
-
-
-
 def setup(bot):
     bot.add_cog(Moderation(bot))
