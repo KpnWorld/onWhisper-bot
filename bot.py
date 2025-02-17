@@ -18,8 +18,11 @@ for filename in os.listdir("./cogs"):
 
 @bot.event
 async def on_ready():
+    # Sync all registered commands with Discord
+    await bot.tree.sync()
     print(f"✅ Logged in as {bot.user}")
     await bot.change_presence(activity=discord.Game(name="Managing your server!"))
+
 
 # Run bot using GitHub Secret
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")  
