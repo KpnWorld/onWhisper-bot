@@ -8,17 +8,16 @@ intents.messages = True
 intents.guilds = True
 intents.members = True  
 
-# Initialize bot (NO NEED to redefine bot.tree)
+# Initialize bot
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    guild = discord.Object(id=YOUR_GUILD_ID)  # Replace with your server ID
-    await bot.tree.sync(guild=guild)  # Sync slash commands
+    await bot.tree.sync()  # Sync commands globally
     print(f"✅ Logged in as {bot.user}")
     await bot.change_presence(activity=discord.Game(name="Managing your server!"))
 
-# Example slash command (No need for bot.tree = ...)
+# Example slash command (works in any server)
 @bot.tree.command(name="hello", description="Say hello!")
 async def hello(interaction: discord.Interaction):
     await interaction.response.send_message("Hello there!")
@@ -26,3 +25,4 @@ async def hello(interaction: discord.Interaction):
 # Run bot using GitHub Secret
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")  
 bot.run(TOKEN)
+
