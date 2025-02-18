@@ -26,4 +26,3 @@ async def hello(interaction: discord.Interaction):
 # Run bot using GitHub Secret
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")  
 bot.run(TOKEN)
-
