@@ -22,7 +22,5 @@ class Fun(commands.Cog):
     async def choose(self, interaction: discord.Interaction, *choices: str):
         await interaction.response.send_message(random.choice(choices))
 
-# Don't add commands manually, remove `self.bot.tree.add_command` lines
-
 async def setup(bot):
     await bot.add_cog(Fun(bot))
