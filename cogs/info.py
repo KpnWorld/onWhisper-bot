@@ -5,8 +5,6 @@ from discord import app_commands
 class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.tree.add_command(self.userinfo)
-        self.bot.tree.add_command(self.serverinfo)
 
     @app_commands.command(name="userinfo", description="Displays information about a user.")
     async def userinfo(self, interaction: discord.Interaction, user: discord.User):
@@ -33,7 +31,5 @@ class Info(commands.Cog):
     async def ping(self, interaction: discord.Interaction):
         await interaction.response.send_message("Pong!")
     
-
-def setup(bot):
-    bot.add_cog(Info(bot))
-
+async def setup(bot):
+    await bot.add_cog(Info(bot))

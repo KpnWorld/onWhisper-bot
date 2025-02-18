@@ -8,14 +8,6 @@ class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.warnings = self.load_warnings()
-        self.bot.tree.add_command(self.kick)
-        self.bot.tree.add_command(self.ban)
-        self.bot.tree.add_command(self.unban)
-        self.bot.tree.add_command(self.clear)
-        self.bot.tree.add_command(self.mute)
-        self.bot.tree.add_command(self.unmute)
-        self.bot.tree.add_command(self.warn)
-        self.bot.tree.add_command(self.warns)
 
     def load_warnings(self):
         if os.path.exists("warnings.json"):
@@ -28,49 +20,65 @@ class Moderation(commands.Cog):
             json.dump(self.warnings, f)
 
     @app_commands.command(name="kick", description="Kicks a member from the server.")
-    async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str = None):
+    @app_commands.checks.has_permissions(kick_members=True)
+    async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
         await member.kick(reason=reason)
-        await interaction.response.send_message(f'{member} has been kicked. Reason: {reason}')
+        await interaction.response.send_message(f'✅ {member} has been kicked. Reason: {reason}')
 
     @app_commands.command(name="ban", description="Bans a member from the server.")
-    async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str = None):
+    @app_commands.checks.has_permissions(ban_members=True)
+    async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
         await member.ban(reason=reason)
-        await interaction.response.send_message(f'{member} has been banned. Reason: {reason}')
+        await interaction.response.send_message(f'✅ {member} has been banned. Reason: {reason}')
 
     @app_commands.command(name="unban", description="Unbans a member from the server.")
-    async def unban(self, interaction: discord.Interaction, user: discord.User, reason: str = None):
+    @app_commands.checks.has_permissions(ban_members=True)
+    async def unban(self, interaction: discord.Interaction, user: discord.User, reason: str = "No reason provided"):
         await interaction.guild.unban(user, reason=reason)
-        await interaction.response.send_message(f'{user} has been unbanned. Reason: {reason}') 
+        await interaction.response.send_message(f'✅ {user} has been unbanned. Reason: {reason}') 
 
     @app_commands.command(name="clear", description="Clears a specified amount of messages.")
+    @app_commands.checks.has_permissions(manage_messages=True)
     async def clear(self, interaction: discord.Interaction, amount: int):
         await interaction.channel.purge(limit=amount)
-        await interaction.response.send_message(f'{amount} messages have been cleared.')
+        await interaction.response.send_message(f'🧹 {amount} messages have been cleared.', ephemeral=True)
 
     @app_commands.command(name="mute", description="Mutes a member.")
+    @app_commands.checks.has_permissions(manage_roles=True)
     async def mute(self, interaction: discord.Interaction, member: discord.Member):
         role = discord.utils.get(interaction.guild.roles, name="Muted")
+        if role is None:
+            await interaction.response.send_message("❌ The 'Muted' role does not exist. Please create one first.", ephemeral=True)
+            return
+        
         await member.add_roles(role)
-        await interaction.response.send_message(f'{member} has been muted.')
-    
+        await interaction.response.send_message(f'🔇 {member} has been muted.')
+
     @app_commands.command(name="unmute", description="Unmutes a member.")
+    @app_commands.checks.has_permissions(manage_roles=True)
     async def unmute(self, interaction: discord.Interaction, member: discord.Member):
         role = discord.utils.get(interaction.guild.roles, name="Muted")
+        if role is None:
+            await interaction.response.send_message("❌ The 'Muted' role does not exist. Please create one first.", ephemeral=True)
+            return
+        
         await member.remove_roles(role)
-        await interaction.response.send_message(f'{member} has been unmuted.')
-    
+        await interaction.response.send_message(f'🔊 {member} has been unmuted.')
+
     @app_commands.command(name="warn", description="Warns a member.")
+    @app_commands.checks.has_permissions(manage_messages=True)
     async def warn(self, interaction: discord.Interaction, member: discord.Member, reason: str):
         if str(member.id) not in self.warnings:
             self.warnings[str(member.id)] = []
         self.warnings[str(member.id)].append(reason)
         self.save_warnings()
-        await interaction.response.send_message(f'{member} has been warned. Reason: {reason}')
+        await interaction.response.send_message(f'⚠️ {member} has been warned. Reason: {reason}')
 
     @app_commands.command(name="warns", description="Displays the number of warnings a member has.")
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
         count = len(self.warnings.get(str(member.id), []))
-        await interaction.response.send_message(f'{member} has {count} warnings.')
+        await interaction.response.send_message(f'📜 {member} has {count} warnings.')
     
-def setup(bot):
-    bot.add_cog(Moderation(bot))
+async def setup(bot):
+    await bot.add_cog(Moderation(bot))
+
