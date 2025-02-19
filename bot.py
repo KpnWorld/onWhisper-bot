@@ -26,7 +26,7 @@ async def on_ready():
         synced = await bot.tree.sync()
         print(f"Slash commands synced: {len(synced)} commands")
     except Exception as e:
-        print(f"Failed to sync commands: {e}")
+        print(f"Failed to sync command(s): {e}")
 
 TOKEN = os.getenv("DISCORD_BOT_TOKEN")  # Run bot using GitHub Secret
 bot.run(TOKEN)
