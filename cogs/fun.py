@@ -33,7 +33,22 @@ class Fun(commands.Cog):
         await interaction.response.send_message(f"🪙 It's **{result}**!")
 
     @app_commands.command(name="rps", description="Plays rock-paper-scissors.")
-    
+    async def rps(self, interaction: discord.Interaction, choice: str):
+        choices = ["rock", "paper", "scissors"]
+        if choice.lower() not in choices:
+            await interaction.response.send_message("❌ Please choose either 'rock', 'paper', or 'scissors'.", ephemeral=True)
+            return
+
+        bot_choice = random.choice(choices)
+        if choice.lower() == bot_choice:
+            result = "It's a tie!"
+        elif (choice.lower() == "rock" and bot_choice == "scissors") or (choice.lower() == "paper" and bot_choice == "rock") or (choice.lower() == "scissors" and bot_choice == "paper"):
+            result = "You win!"
+        else:
+            result = "I win!"
+
+        await interaction.response.send_message(f"🗿 You chose: **{choice}**\n🤖 I chose: **{bot_choice}**\n🏆 {result}")
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
