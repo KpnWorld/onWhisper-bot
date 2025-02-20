@@ -17,6 +17,14 @@ async def load_cogs():
         if filename.endswith(".py"):
             await bot.load_extension(f"cogs.{filename[:-3]}")
 
+# Load specific extensions
+for ext in ["cogs.moderation", "cogs.fun", "cogs.info"]:
+    try:
+        bot.load_extension(ext)
+        print(f"✅ Loaded {ext}")
+    except Exception as e:
+        print(f"❌ Failed to load {ext}: {e}")
+
 @bot.event
 async def on_ready():
     await load_cogs()  # Load cogs before syncing commands
