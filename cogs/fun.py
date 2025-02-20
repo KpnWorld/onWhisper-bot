@@ -27,5 +27,13 @@ class Fun(commands.Cog):
         selected = random.choice(options).strip()
         await interaction.response.send_message(f"🤖 I choose: **{selected}**")
 
+    @app_commands.command(name="coinflip", description="Flips a coin.")
+    async def coinflip(self, interaction: discord.Interaction):
+        result = random.choice(["Heads", "Tails"])
+        await interaction.response.send_message(f"🪙 It's **{result}**!")
+
+    @app_commands.command(name="rps", description="Plays rock-paper-scissors.")
+    
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
