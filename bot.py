@@ -12,7 +12,7 @@ intents.guilds = True
 intents.members = True
 
 # Create bot instance
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="o", intents=intents)
 
 # List of activities
 activities = [
@@ -25,7 +25,9 @@ activities = [
 # Change activity periodically
 @tasks.loop(minutes=5)
 async def change_activity():
+    await bot.wait_until_ready()
     new_activity = random.choice(activities)
+    print(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
     await bot.change_presence(activity=new_activity)
 
 # Load all cogs in the 'cogs' folder
@@ -39,12 +41,17 @@ async def on_ready():
     init_db()  # Initialize the database
     await load_cogs()  # Load cogs before syncing commands
     print(f"✅ Logged in as {bot.user}")
-    change_activity.start()  # Start the activity change loop
+
+    await bot.change_presence(activity=random.choice(activities))  # Set initial presence
+    if not change_activity.is_running():
+        change_activity.start()  # Start the loop only once
+
     try:
         synced = await bot.tree.sync()
         print(f"Slash commands synced: {len(synced)} commands")
     except Exception as e:
         print(f"Failed to sync command(s): {e}")
+
 
 @bot.command(name="check_cogs")
 @commands.is_owner()
