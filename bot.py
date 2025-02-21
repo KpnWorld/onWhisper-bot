@@ -29,5 +29,10 @@ async def on_ready():
     except Exception as e:
         print(f"Failed to sync command(s): {e}")
 
-TOKEN = os.getenv("DISCORD_BOT_TOKEN")  # Run bot using GitHub Secret
-bot.run(TOKEN)
+async def main():
+    async with bot:
+        await load_cogs()
+        await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
+
+if __name__ == "__main__":
+    asyncio.run(main())  # Properly start the bot asynchronously
