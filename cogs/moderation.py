@@ -23,19 +23,19 @@ class Moderation(commands.Cog):
     @app_commands.checks.has_permissions(kick_members=True)
     async def kick(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
         await member.kick(reason=reason)
-        await interaction.response.send_message(f'✅ {member} has been kicked. Reason: {reason}')
+        await interaction.response.send_message(f'✅ {member.mention} has been kicked. Reason: {reason}')
 
     @app_commands.command(name="ban", description="Bans a member from the server.")
     @app_commands.checks.has_permissions(ban_members=True)
     async def ban(self, interaction: discord.Interaction, member: discord.Member, reason: str = "No reason provided"):
         await member.ban(reason=reason)
-        await interaction.response.send_message(f'✅ {member} has been banned. Reason: {reason}')
+        await interaction.response.send_message(f'✅ {member.mention} has been banned. Reason: {reason}')
 
     @app_commands.command(name="unban", description="Unbans a member from the server.")
     @app_commands.checks.has_permissions(ban_members=True)
     async def unban(self, interaction: discord.Interaction, user: discord.User, reason: str = "No reason provided"):
         await interaction.guild.unban(user, reason=reason)
-        await interaction.response.send_message(f'✅ {user} has been unbanned. Reason: {reason}') 
+        await interaction.response.send_message(f'✅ {user.mention} has been unbanned. Reason: {reason}') 
 
     @app_commands.command(name="clear", description="Clears a specified amount of messages.")
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -52,7 +52,7 @@ class Moderation(commands.Cog):
             return
         
         await member.add_roles(role)
-        await interaction.response.send_message(f'🔇 {member} has been muted.')
+        await interaction.response.send_message(f'🔇 {member.mention} has been muted.')
 
     @app_commands.command(name="unmute", description="Unmutes a member.")
     @app_commands.checks.has_permissions(manage_roles=True)
@@ -63,7 +63,7 @@ class Moderation(commands.Cog):
             return
         
         await member.remove_roles(role)
-        await interaction.response.send_message(f'🔊 {member} has been unmuted.')
+        await interaction.response.send_message(f'🔊 {member.mention} has been unmuted.')
 
     @app_commands.command(name="warn", description="Warns a member.")
     @app_commands.checks.has_permissions(manage_messages=True)
@@ -72,12 +72,12 @@ class Moderation(commands.Cog):
             self.warnings[str(member.id)] = []
         self.warnings[str(member.id)].append(reason)
         self.save_warnings()
-        await interaction.response.send_message(f'⚠️ {member} has been warned. Reason: {reason}')
+        await interaction.response.send_message(f'⚠️ {member.mention} has been warned. Reason: {reason}')
 
     @app_commands.command(name="warns", description="Displays the number of warnings a member has.")
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
         count = len(self.warnings.get(str(member.id), []))
-        await interaction.response.send_message(f'📜 {member} has {count} warnings.')
+        await interaction.response.send_message(f'📜 {member.mention} has {count} warnings.')
     
 async def setup(bot):
     await bot.add_cog(Moderation(bot))

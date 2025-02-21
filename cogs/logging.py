@@ -23,23 +23,23 @@ class Logging(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user:
             return
-        await self.log_message(f"{message.author}: {message.content}")
+        await self.log_message(f"{message.author.mention}: {message.content}")
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
-        await self.log_message(f"{message.author}'s message was deleted: {message.content}")
+        await self.log_message(f"{message.author.mention}'s message was deleted: {message.content}")
     
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
-        await self.log_message(f"{before.author}'s message was edited: {before.content} -> {after.content}")
+        await self.log_message(f"{before.author.mention}'s message was edited: {before.content} -> {after.content}")
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        await self.log_message(f"{member} has joined the server.")
+        await self.log_message(f"{member.mention} has joined the server.")
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        await self.log_message(f"{member} has left the server.")
+        await self.log_message(f"{member.mention} has left the server.")
 
 async def setup(bot):
     await bot.add_cog(Logging(bot))
