@@ -39,22 +39,28 @@ class Logging(commands.Cog):
     @commands.Cog.listener()
     async def on_message_delete(self, message):
         if not self.logging_paused:
-            await self.log_message(f"{message.author.mention}'s message was deleted: {message.content}")
-    
+            embed = discord.Embed(title="Message Deleted", description=f"{message.author.mention}'s message was deleted: {message.content}", color=discord.Color.red())
+            await self.log_message(embed)
+
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
         if not self.logging_paused:
-            await self.log_message(f"{before.author.mention}'s message was edited: {before.content} -> {after.content}")
-    
+            embed = discord.Embed(title="Message Edited", description=f"{before.author.mention}'s message was edited.", color=discord.Color.orange())
+            embed.add_field(name="Before", value=before.content, inline=False)
+            embed.add_field(name="After", value=after.content, inline=False)
+            await self.log_message(embed)
+
     @commands.Cog.listener()
     async def on_member_join(self, member):
         if not self.logging_paused:
-            await self.log_message(f"{member.mention} has joined the server.")
-    
+            embed = discord.Embed(title="Member Joined", description=f"{member.mention} has joined the server.", color=discord.Color.green())
+            await self.log_message(embed)
+
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         if not self.logging_paused:
-            await self.log_message(f"{member.mention} has left the server.")
+            embed = discord.Embed(title="Member Left", description=f"{member.mention} has left the server.", color=discord.Color.red())
+            await self.log_message(embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Logging(bot))
