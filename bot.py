@@ -1,7 +1,8 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import os
 import asyncio
+import random
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -11,6 +12,20 @@ intents.members = True
 
 # Create bot instance
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+# List of activities
+activities = [
+    discord.Game(name="Managing your server!"),
+    discord.Game(name="Moderating chats!"),
+    discord.Game(name="Analyzing data!"),
+    discord.Game(name="Having fun with commands!"),
+]
+
+# Change activity periodically
+@tasks.loop(minutes=10)
+async def change_activity():
+    new_activity = random.choice(activities)
+    await bot.change_presence(activity=new_activity)
 
 # Load all cogs in the 'cogs' folder
 async def load_cogs():
@@ -22,7 +37,7 @@ async def load_cogs():
 async def on_ready():
     await load_cogs()  # Load cogs before syncing commands
     print(f"✅ Logged in as {bot.user}")
-    await bot.change_presence(activity=discord.Game(name="Managing your server!"))
+    change_activity.start()  # Start the activity change loop
     try:
         synced = await bot.tree.sync()
         print(f"Slash commands synced: {len(synced)} commands")
