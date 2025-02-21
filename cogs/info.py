@@ -9,7 +9,8 @@ class Info(commands.Cog):
     @app_commands.command(name="ping", description="Check the bot's latency.")
     async def ping(self, interaction: discord.Interaction):
         latency = round(self.bot.latency * 1000)  # Convert to ms
-        await interaction.response.send_message(f"🏓 Pong! Latency: **{latency}ms**")
+        embed = discord.Embed(title="Pong!", description=f"Latency: **{latency}ms**", color=discord.Color.blue())
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="about", description="Learn more about onWhisper.")
     async def about(self, interaction: discord.Interaction):

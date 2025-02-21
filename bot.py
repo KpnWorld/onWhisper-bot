@@ -33,7 +33,8 @@ async def on_ready():
 @commands.is_owner()
 async def check_cogs(ctx):
     cogs = [cog for cog in bot.cogs]
-    await ctx.send(f"🟢 Online cogs: {', '.join(cogs)}")
+    embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
+    await ctx.send(embed=embed)
 
 async def main():
     async with bot:

@@ -11,13 +11,15 @@ class Logging(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     async def set_log_channel(self, interaction: discord.Interaction, channel: discord.TextChannel):
         self.log_channel_id = channel.id
-        await interaction.response.send_message(f"✅ Logging channel set to {channel.mention}")
+        embed = discord.Embed(title="Logging Channel Set", description=f"Logging channel set to {channel.mention}", color=discord.Color.green())
+        await interaction.response.send_message(embed=embed)
 
     async def log_message(self, content: str):
         if self.log_channel_id:
             channel = self.bot.get_channel(self.log_channel_id)
             if channel:
-                await channel.send(content)
+                embed = discord.Embed(description=content, color=discord.Color.blue())
+                await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -43,4 +45,3 @@ class Logging(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Logging(bot))
-  
