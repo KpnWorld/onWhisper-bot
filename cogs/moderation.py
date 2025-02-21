@@ -17,7 +17,7 @@ class Moderation(commands.Cog):
 
     def save_warnings(self):
         with open("warnings.json", "w") as f:
-            json.dump(self.warnings, f)
+            json.dump(self.warnings, f, indent=4)  # Save with indentation for readability
 
     @app_commands.command(name="kick", description="Kicks a member from the server.")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -76,6 +76,7 @@ class Moderation(commands.Cog):
 
     @app_commands.command(name="warns", description="Displays the number of warnings a member has.")
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
+        self.warnings = self.load_warnings()  # Load warnings from the JSON file
         count = len(self.warnings.get(str(member.id), []))
         await interaction.response.send_message(f'📜 {member.mention} has {count} warnings.')
     
