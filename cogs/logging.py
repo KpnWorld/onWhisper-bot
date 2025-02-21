@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 
 class Logging(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.log_channel_id = None  # Initialize log channel ID
 
