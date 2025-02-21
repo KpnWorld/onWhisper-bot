@@ -42,4 +42,5 @@ async def main():
         await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
 
 if __name__ == "__main__":
+    print("Starting bot...")
     asyncio.run(main())  # Properly start the bot asynchronously
