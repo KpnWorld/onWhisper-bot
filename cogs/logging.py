@@ -37,25 +37,27 @@ class Logging(commands.Cog):
                 await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author == self.bot.user:
-            return
-        await self.log_message(f"{message.author.mention}: {message.content}")
-
-    @commands.Cog.listener()
     async def on_message_delete(self, message):
+        if self.logging_paused:
+            return
         await self.log_message(f"{message.author.mention}'s message was deleted: {message.content}")
     
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
+        if self.logging_paused:
+            return
         await self.log_message(f"{before.author.mention}'s message was edited: {before.content} -> {after.content}")
     
     @commands.Cog.listener()
     async def on_member_join(self, member):
+        if self.logging_paused:
+            return
         await self.log_message(f"{member.mention} has joined the server.")
     
     @commands.Cog.listener()
     async def on_member_remove(self, member):
+        if self.logging_paused:
+            return
         await self.log_message(f"{member.mention} has left the server.")
 
 async def setup(bot: commands.Bot):
