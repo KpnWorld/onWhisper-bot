@@ -29,6 +29,12 @@ async def on_ready():
     except Exception as e:
         print(f"Failed to sync command(s): {e}")
 
+@bot.command(name="check_cogs")
+@commands.is_owner()
+async def check_cogs(ctx):
+    cogs = [cog for cog in bot.cogs]
+    await ctx.send(f"🟢 Online cogs: {', '.join(cogs)}")
+
 async def main():
     async with bot:
         await load_cogs()
