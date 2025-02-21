@@ -1,23 +1,11 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import json
-import os
+from db.bot import add_warning, get_warnings
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.warnings = self.load_warnings()
-
-    def load_warnings(self):
-        if os.path.exists("warnings.json"):
-            with open("warnings.json", "r") as f:
-                return json.load(f)
-        return {}
-
-    def save_warnings(self):
-        with open("warnings.json", "w") as f:
-            json.dump(self.warnings, f, indent=4)  # Save with indentation for readability
 
     @app_commands.command(name="kick", description="Kicks a member from the server.")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -77,19 +65,18 @@ class Moderation(commands.Cog):
     @app_commands.command(name="warn", description="Warns a member.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def warn(self, interaction: discord.Interaction, member: discord.Member, reason: str):
-        if str(member.id) not in self.warnings:
-            self.warnings[str(member.id)] = []
-        self.warnings[str(member.id)].append(reason)
-        self.save_warnings()
+        add_warning(member.id, interaction.guild.id, reason)
         embed = discord.Embed(title="Member Warned", description=f"{member.mention} has been warned.", color=discord.Color.yellow())
         embed.add_field(name="Reason", value=reason, inline=False)
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="warns", description="Displays the number of warnings a member has.")
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
-        self.warnings = self.load_warnings()  # Load warnings from the JSON file
-        count = len(self.warnings.get(str(member.id), []))
+        warnings = get_warnings(member.id, interaction.guild.id)
+        count = len(warnings)
         embed = discord.Embed(title="Member Warnings", description=f"{member.mention} has {count} warnings.", color=discord.Color.yellow())
+        for reason, timestamp in warnings:
+            embed.add_field(name=timestamp, value=reason, inline=False)
         await interaction.response.send_message(embed=embed)
     
 async def setup(bot):

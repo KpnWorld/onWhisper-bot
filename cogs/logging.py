@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from db.logdb import set_log_channel, get_log_channel
+from db.bot import set_log_channel, get_log_channel
 
 # Set this to your desired owner user ID
 OWNER_ID = 895767962722660372  # Replace with the actual owner ID

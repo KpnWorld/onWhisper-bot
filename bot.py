@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 import os
 import asyncio
 import random
-from db.logdb import init_db
+from db.bot import init_db
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -51,7 +51,6 @@ async def on_ready():
         print(f"Slash commands synced: {len(synced)} commands")
     except Exception as e:
         print(f"Failed to sync command(s): {e}")
-
 
 @bot.command(name="check_cogs")
 @commands.is_owner()
