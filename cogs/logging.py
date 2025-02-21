@@ -41,6 +41,6 @@ class Logging(commands.Cog):
     async def on_member_remove(self, member):
         await self.log_message(f"{member.mention} has left the server.")
 
-async def setup(bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Logging(bot))
-    bot.tree.add_command(Logging.set_log_channel)  # Ensure the command is added to the bot's command tree
+  
