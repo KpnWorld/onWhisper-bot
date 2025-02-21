@@ -23,7 +23,7 @@ activities = [
 ]
 
 # Change activity periodically
-@tasks.loop(minutes=10)
+@tasks.loop(minutes=5)
 async def change_activity():
     new_activity = random.choice(activities)
     await bot.change_presence(activity=new_activity)
@@ -56,6 +56,7 @@ async def check_cogs(ctx):
 async def main():
     async with bot:
         await load_cogs()
+        change_activity.start()  # Start the activity change loop
         await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
 
 if __name__ == "__main__":
