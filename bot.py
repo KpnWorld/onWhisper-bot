@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 import os
 import asyncio
 import random
+from db.logdb import init_db
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -35,6 +36,7 @@ async def load_cogs():
 
 @bot.event
 async def on_ready():
+    init_db()  # Initialize the database
     await load_cogs()  # Load cogs before syncing commands
     print(f"✅ Logged in as {bot.user}")
     change_activity.start()  # Start the activity change loop
