@@ -22,7 +22,7 @@ activities = [
     discord.Game(name="Managing your server!"),
     discord.Game(name="Moderating chats!"),
     discord.Game(name="Analyzing data!"),
-    discord.Game(name="Having fun with commands!"),
+    discord.Game(name="Version 1.0.0 is coming soon!"),
 ]
 
 # Change activity periodically
@@ -72,6 +72,7 @@ async def check_cogs(interaction: discord.Interaction):
     
     Usage: /check_cogs
     """
+    print("check_cogs command executed")  # Debug print to verify command execution
     cogs = [cog for cog in bot.cogs]
     embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
     await interaction.response.send_message(embed=embed)
