@@ -11,8 +11,11 @@ intents.messages = True
 intents.guilds = True
 intents.members = True
 
-# Create bot instance
-bot = commands.Bot(command_prefix="!onWhisper ", intents=intents)
+# Set the bot owner's ID
+owner_id = int(os.getenv("OWNER_ID"))
+
+# Create bot instance with owner_id
+bot = commands.Bot(command_prefix="!onWhisper ", intents=intents, owner_id=owner_id)
 
 # List of activities
 activities = [
@@ -31,6 +34,7 @@ async def change_activity():
 
 async def start_change_activity():
     await bot.wait_until_ready()
+
 async def load_cogs():
     try:
         for filename in os.listdir("./cogs"):
@@ -38,10 +42,8 @@ async def load_cogs():
                 await bot.load_extension(f"cogs.{filename[:-3]}")
     except Exception as e:
         print(f"Error loading cogs: {e}")
-    for filename in os.listdir("./cogs"):
-        if filename.endswith(".py"):
-            await bot.load_extension(f"cogs.{filename[:-3]}")
     init_db()  # Initialize the database (e.g., creating tables, setting up initial data)
+
 @bot.event
 async def on_ready():
     init_db()  # Initialize the database
@@ -78,7 +80,6 @@ async def main():
             return
         await bot.start(token)
         await start_change_activity()  # Start the activity change loop
-        await bot.start(os.getenv("DISCORD_BOT_TOKEN"))
 
 if __name__ == "__main__":
     print("Starting bot...")
