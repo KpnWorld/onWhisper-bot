@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
+import bot.db
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
