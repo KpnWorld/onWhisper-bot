@@ -27,7 +27,7 @@ jobs:
           OWNER_ID: ${{ secrets.OWNER_ID }}
         run: |
           echo "Starting bot..."
-          python bot.py
+          nohup python bot.py > bot.log 2>&1 &
           echo "Bot has started."
 
       - name: Send Deployment Notification to Discord
@@ -35,4 +35,12 @@ jobs:
           curl -H "Content-Type: application/json" \
                -X POST \
                -d '{"username": "GitHub Actions", "content": "🚀 **onWhisper-bot has been deployed!** \n✅ Commit: `${{ github.event.head_commit.message }}` \n🔗 Repo: [onWhisper-bot](https://github.com/KpnWorld/onWhisper-bot)"}' \
+               ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify Discord on Failure
+        if: failure()
+        run: |
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d '{"username": "GitHub Actions", "content": "❌ **onWhisper-bot deployment failed!** Check logs for details."}' \
                ${{ secrets.DISCORD_WEBHOOK }}
