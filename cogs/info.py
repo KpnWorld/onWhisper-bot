@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import bot.db
+from db.bot import init_db  
 
 class Info(commands.Cog):
     def __init__(self, bot: commands.Bot):

@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
-import bot.db
+from db.bot import init_db  
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -52,6 +52,17 @@ class Fun(commands.Cog):
             result = "I win!"
 
         embed = discord.Embed(title="Rock-Paper-Scissors", description=f"🗿 {interaction.user.mention}, you chose: **{choice}**\n🤖 I chose: **{bot_choice}**\n🏆 {result}", color=discord.Color.blue())
+        await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="joke", description="Tell a random joke.")
+    async def joke(self, interaction: discord.Interaction):
+        jokes = [
+            "Why don't scientists trust atoms? Because they make up everything!",
+            "Why did the scarecrow win an award? Because he was outstanding in his field!",
+            "Why don't skeletons fight each other? They don't have the guts."
+        ]
+        joke = random.choice(jokes)
+        embed = discord.Embed(title="Joke", description=f"😂 {interaction.user.mention}, here's a joke for you: {joke}", color=discord.Color.blue())
         await interaction.response.send_message(embed=embed)
 
 async def setup(bot: commands.Bot):
