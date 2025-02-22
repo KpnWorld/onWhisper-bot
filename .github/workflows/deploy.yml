@@ -25,7 +25,10 @@ jobs:
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           OWNER_ID: ${{ secrets.OWNER_ID }}
-        run: python bot.py
+        run: |
+          echo "Starting bot..."
+          python bot.py
+          echo "Bot has started."
 
       - name: Send Deployment Notification to Discord
         run: |

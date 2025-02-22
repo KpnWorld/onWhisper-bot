@@ -4,6 +4,7 @@ import os
 import asyncio
 import random
 from db.bot import init_db
+import time  # Import time module
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -39,6 +40,7 @@ async def load_cogs():
     try:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
+                print(f"Loading cog: {filename}")  # Debug log
                 await bot.load_extension(f"cogs.{filename[:-3]}")
     except Exception as e:
         print(f"Error loading cogs: {e}")
@@ -51,9 +53,13 @@ async def on_ready():
     print(f"✅ Logged in as {bot.user}")
 
     await bot.change_presence(activity=random.choice(activities))  # Set initial presence
+
+    # Measure the time taken to sync commands
+    start_time = time.time()
     try:
         synced = await bot.tree.sync()
-        print(f"Slash commands synced: {len(synced)} commands")
+        end_time = time.time()
+        print(f"Slash commands synced: {len(synced)} commands in {end_time - start_time:.2f} seconds")
     except Exception as e:
         print(f"Failed to sync command(s): {e}")
 
@@ -93,6 +99,7 @@ async def main():
         if token is None:
             print("Error: DISCORD_BOT_TOKEN environment variable not set.")
             return
+        print("Starting bot...")
         await bot.start(token)
         await start_change_activity()  # Start the activity change loop
 
