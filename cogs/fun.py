@@ -67,85 +67,26 @@ class Fun(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # New whisper command
-    @app_commands.command(name="whisper", description="Send a temporary whispered message.")
-    async def whisper(self, interaction: discord.Interaction, message: str):
-        # Create a modal for the user to edit their message and time
-        modal = discord.ui.Modal(title="Edit Whisper Message", custom_id="whisper_modal")
-
-        # Create a TextInput for the whispered message
-        text_input_message = discord.ui.TextInput(
-            label="Your message",
-            placeholder="Edit your message...",
-            default=message,
-            required=True,
-            max_length=200
-        )
-
-        # Create a TextInput for the time
-        text_input_time = discord.ui.TextInput(
-            label="Time (seconds)",
-            placeholder="Enter the time in seconds...",
-            required=True,
-            max_length=6
-        )
-
-        modal.add_item(text_input_message)
-        modal.add_item(text_input_time)
-
-        # Handle the submission of the modal
-        modal.callback = self.on_submit
-        await interaction.response.send_modal(modal)
-
-    async def on_submit(self, interaction: discord.Interaction, message: str):
-        whisper_message = interaction.data['components'][0]['components'][0]['value']  # Get the edited message
+    @app_commands.command(name="whisper", description="Whisper a message to someone.")
+    async def whisper(self, interaction: discord.Interaction, user: discord.User, message: str):
         try:
-            time = int(interaction.data['components'][1]['components'][0]['value'])  # Get the time and convert to int
-            if time <= 0:
-                await interaction.response.send_message("❌ The time must be a positive integer.", ephemeral=True)
-                return
-        except ValueError:
-            await interaction.response.send_message("❌ Please enter a valid number for the time.", ephemeral=True)
+            await user.send(f"🤫 {interaction.user.mention} whispers: {message}")
+            await interaction.response.send_message(f"✅ Your message has been whispered to {user.mention}.", ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message("❌ I cannot send a message to this user. They might have DMs disabled.", ephemeral=True)
+
+    # New countdown command
+    @app_commands.command(name="countdown", description="Start a countdown timer.")
+    async def countdown(self, interaction: discord.Interaction, seconds: int):
+        if seconds < 1 or seconds > 3600:
+            await interaction.response.send_message("❌ Please provide a time between 1 and 3600 seconds.", ephemeral=True)
             return
 
-        embed = discord.Embed(title="Whisper", description=f"🗣 {interaction.user.mention} whispered: **{whisper_message}**", color=discord.Color.purple())
-         # Send the message
-        whispered_message = await interaction.channel.send(embed=embed)
-    
-        # Confirm message deletion
-        await interaction.response.send_message(f"Your whisper has been sent and will be deleted in {time} seconds.", ephemeral=True)
+        message = await interaction.response.send_message(f"⏳ {interaction.user.mention}, starting countdown for {seconds} seconds...")
+        for i in range(seconds, 0, -1):
+            await asyncio.sleep(1)
+            await message.edit(content=f"⏳ {interaction.user.mention}, {i} seconds remaining...")
 
-        # Delete the message after the specified time
-        await asyncio.sleep(time)
-        await whispered_message.delete()
-        async def delete_message_after(self, message: discord.Message, delay: int):
-            await asyncio.sleep(delay)
-            await message.delete()
-        # Create a modal for the user to edit their message and time
-        modal = discord.ui.Modal(title="Edit Whisper Message", custom_id="whisper_modal")
-
-        # Create a TextInput for the whispered message
-        text_input_message = discord.ui.TextInput(
-            label="Your message",
-            placeholder="Edit your message...",
-            default=message,
-            required=True,
-            max_length=200
-        )
-
-        # Create a TextInput for the time
-        text_input_time = discord.ui.TextInput(
-            label="Time (seconds)",
-            placeholder="Enter the time in seconds...",
-            required=True,
-            max_length=4
-        )
-
-        modal.add_item(text_input_message)
-        modal.add_item(text_input_time)
-
-        # Handle the submission of the modal
-        modal.callback = self.on_submit
-        modal.on_submit = self.on_submit
-
+        await message.edit(content=f"🎉 {interaction.user.mention}, countdown has ended!")
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
