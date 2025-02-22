@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
+from datetime import datetime
 from db.bot import add_warning, get_warnings
 
 class Moderation(commands.Cog):
@@ -76,7 +77,8 @@ class Moderation(commands.Cog):
         count = len(warnings)
         embed = discord.Embed(title="Member Warnings", description=f"{member.mention} has {count} warnings.", color=discord.Color.yellow())
         for reason, timestamp in warnings:
-            embed.add_field(name=timestamp, value=reason, inline=False)
+            formatted_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")  # Convert timestamp
+            embed.add_field(name=formatted_time, value=reason, inline=False)
         await interaction.response.send_message(embed=embed)
     
 async def setup(bot):
