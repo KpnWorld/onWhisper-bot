@@ -67,14 +67,59 @@ class Fun(commands.Cog):
         await interaction.response.send_message(embed=embed)
 
     # New whisper command
-    @app_commands.command(name="whisper", description="Whisper a message to someone.")
-    async def whisper(self, interaction: discord.Interaction, user: discord.User, message: str):
-        try:
-            await user.send(f"🤫 {interaction.user.mention} whispers: {message}")
-            await interaction.response.send_message(f"✅ Your message has been whispered to {user.mention}.", ephemeral=True)
-        except discord.Forbidden:
-            await interaction.response.send_message("❌ I cannot send a message to this user. They might have DMs disabled.", ephemeral=True)
+    class WhisperModal(discord.ui.Modal, title="Whisper Message"):
+        def __init__(self, interaction: discord.Interaction):
+            super().__init__()
+            self.interaction = interaction
 
+            # Text input for the whisper message
+            self.message = discord.ui.TextInput(
+                label="Your message",
+                placeholder="Enter your whispered message...",
+                required=True,
+                max_length=200
+            )
+            self.add_item(self.message)
+
+            # Text input for the time duration
+            self.duration = discord.ui.TextInput(
+                label="Time (seconds)",
+                placeholder="Enter how long the message should last...",
+                required=True,
+                max_length=4
+            )
+            self.add_item(self.duration)
+
+        async def on_submit(self, interaction: discord.Interaction):
+            whisper_message = self.message.value  # Get message input
+            try:
+                duration = int(self.duration.value)  # Get time input and convert to int
+                if duration <= 0:
+                    raise ValueError
+            except ValueError:
+                await interaction.response.send_message("❌ Please enter a valid positive number for the time.", ephemeral=True)
+                return
+
+            embed = discord.Embed(
+                title="Whisper",
+                description=f"🗣 {interaction.user.mention} whispered: **{whisper_message}**",
+                color=discord.Color.purple()
+            )
+            
+            # Send the whisper message
+            whispered_message = await interaction.channel.send(embed=embed)
+
+            # Confirm the message was sent
+            await interaction.response.send_message(f"Your whisper has been sent and will be deleted in {duration} seconds.", ephemeral=True)
+
+            # Wait for the specified time before deleting
+            await asyncio.sleep(duration)
+            await whispered_message.delete()
+
+    @app_commands.command(name="whisper", description="Send a temporary whispered message.")
+    async def whisper(self, interaction: discord.Interaction):
+        """Opens a modal for the user to input a whisper message and time duration."""
+        await interaction.response.send_modal(self.WhisperModal(interaction))
     # New countdown command
     @app_commands.command(name="countdown", description="Start a countdown timer.")
     async def countdown(self, interaction: discord.Interaction, seconds: int):
