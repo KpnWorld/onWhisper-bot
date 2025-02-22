@@ -90,6 +90,24 @@ class Fun(commands.Cog):
             )
             self.add_item(self.duration)
 
+            # Channel selection
+            self.channel = discord.ui.ChannelSelect(
+                label="Select Channel",
+                placeholder="Choose a channel to send the message...",
+                required=True,
+                channel_types=[discord.ChannelType.text]
+            )
+            self.add_item(self.channel)
+
+            # User mention input
+            self.mention = discord.ui.TextInput(
+                label="Mention User (optional)",
+                placeholder="Enter the user ID to mention...",
+                required=False,
+                max_length=20
+            )
+            self.add_item(self.mention)
+
         async def on_submit(self, interaction: discord.Interaction):
             whisper_message = self.message.value  # Get message input
             try:
@@ -100,17 +118,33 @@ class Fun(commands.Cog):
                 await interaction.response.send_message("❌ Please enter a valid positive number for the time.", ephemeral=True)
                 return
 
+            selected_channel = self.channel.value  # Get selected channel
+            if not selected_channel:
+                await interaction.response.send_message("❌ Please select a valid channel.", ephemeral=True)
+                return
+
+            mention_user = None
+            if self.mention.value:
+                try:
+                    mention_user = await self.interaction.guild.fetch_member(int(self.mention.value))
+                except Exception:
+                    await interaction.response.send_message("❌ Invalid user ID for mention.", ephemeral=True)
+                    return
+
             embed = discord.Embed(
                 title="Whisper",
                 description=f"🗣 {interaction.user.mention} whispered: **{whisper_message}**",
                 color=discord.Color.purple()
             )
             
-            # Send the whisper message
-            whispered_message = await interaction.channel.send(embed=embed)
+            # Send the whisper message to the selected channel
+            if mention_user:
+                whispered_message = await selected_channel.send(content=mention_user.mention, embed=embed)
+            else:
+                whispered_message = await selected_channel.send(embed=embed)
 
             # Confirm the message was sent
-            await interaction.response.send_message(f"Your whisper has been sent and will be deleted in {duration} seconds.", ephemeral=True)
+            await interaction.response.send_message(f"Your whisper has been sent to {selected_channel.mention} and will be deleted in {duration} seconds.", ephemeral=True)
 
             # Wait for the specified time before deleting
             await asyncio.sleep(duration)
@@ -118,8 +152,9 @@ class Fun(commands.Cog):
 
     @app_commands.command(name="whisper", description="Send a temporary whispered message.")
     async def whisper(self, interaction: discord.Interaction):
-        """Opens a modal for the user to input a whisper message and time duration."""
+        """Opens a modal for the user to input a whisper message, time duration, and select a channel."""
         await interaction.response.send_modal(self.WhisperModal(interaction))
+
     # New countdown command
     @app_commands.command(name="countdown", description="Start a countdown timer.")
     async def countdown(self, interaction: discord.Interaction, seconds: int):
