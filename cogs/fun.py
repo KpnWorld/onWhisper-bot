@@ -2,7 +2,8 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import random
-from db.bot import init_db  
+import asyncio
+from datetime import timedelta
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -64,6 +65,59 @@ class Fun(commands.Cog):
         joke = random.choice(jokes)
         embed = discord.Embed(title="Joke", description=f"😂 {interaction.user.mention}, here's a joke for you: {joke}", color=discord.Color.blue())
         await interaction.response.send_message(embed=embed)
+
+    # New whisper command
+    @app_commands.command(name="whisper", description="Send a temporary whispered message.")
+    async def whisper(self, interaction: discord.Interaction, message: str):
+        # Create a modal for the user to edit their message and time
+        modal = discord.ui.Modal(title="Edit Whisper Message")
+
+        # Create a TextInput for the whispered message
+        text_input_message = discord.ui.TextInput(
+            label="Your message",
+            placeholder="Edit your message...",
+            default=message,
+            required=True,
+            max_length=200
+        )
+
+        # Create a TextInput for the time
+        text_input_time = discord.ui.TextInput(
+            label="Time (seconds)",
+            placeholder="Enter the time in seconds...",
+            required=True,
+            max_length=4
+        )
+
+        modal.add_item(text_input_message)
+        modal.add_item(text_input_time)
+
+        # Handle the submission of the modal
+        async def on_submit(interaction: discord.Interaction):
+            whisper_message = text_input_message.value  # Get the edited message
+            try:
+                time = int(text_input_time.value)  # Get the time and convert to int
+                if time <= 0:
+                    await interaction.response.send_message("❌ The time must be a positive integer.", ephemeral=True)
+                    return
+            except ValueError:
+                await interaction.response.send_message("❌ Please enter a valid number for the time.", ephemeral=True)
+                return
+
+            embed = discord.Embed(title="Whisper", description=f"🗣 {interaction.user.mention} whispered: **{whisper_message}**", color=discord.Color.purple())
+            # Send the message
+            whispered_message = await interaction.channel.send(embed=embed)
+
+            # Delete the message after the specified time
+            await asyncio.sleep(time)
+            await whispered_message.delete()
+
+            # Confirm message deletion
+            await interaction.response.send_message(f"Your whisper has been sent and will be deleted in {time} seconds.", ephemeral=True)
+
+        # Show the modal to the user
+        modal.on_submit = on_submit
+        await interaction.response.send_modal(modal)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
