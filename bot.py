@@ -11,8 +11,8 @@ intents.messages = True
 intents.guilds = True
 intents.members = True
 
-# Set the bot owner's ID
-owner_id = int(os.getenv("OWNER_ID"))
+# Set the bot owner's ID from environment variable
+owner_id = int(os.getenv("OWNER_ID"))  # Retrieve owner ID from environment variable
 
 # Create bot instance with owner_id
 bot = commands.Bot(command_prefix="!onWhisper ", intents=intents, owner_id=owner_id)
@@ -60,17 +60,27 @@ async def on_ready():
     if not change_activity.is_running():
         await start_change_activity()  # Start the loop only once
 
-@bot.command(name="check_cogs")
-@commands.is_owner()
-async def check_cogs(ctx):
+@bot.tree.command(name="check_cogs", description="Check which cogs are currently loaded")
+@discord.app_commands.checks.is_owner()
+async def check_cogs(interaction: discord.Interaction):
     """
-    Command for the bot owner to check which cogs are currently loaded.
+    Slash command for the bot owner to check which cogs are currently loaded.
     
-    Usage: !onWhisper check_cogs
+    Usage: /check_cogs
     """
     cogs = [cog for cog in bot.cogs]
     embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
-    await ctx.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
+
+@bot.tree.command(name="list_commands", description="List all registered commands")
+async def list_commands(interaction: discord.Interaction):
+    """
+    Slash command to list all registered commands.
+    
+    Usage: /list_commands
+    """
+    commands = [command.name for command in bot.commands]
+    await interaction.response.send_message(f"Registered commands: {', '.join(commands)}")
 
 async def main():
     async with bot:
