@@ -5,8 +5,15 @@ import asyncio
 import re  # Import regular expressions module
 import logging
 
+__version__ = "1.0.0"  # Version information
+
 # Set up logging for the Whisper Cog
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Set logging level to INFO
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class Whisper(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -68,7 +75,7 @@ class Whisper(commands.Cog):
                 await interaction.response.send_message("❌ The duration must be at least 1 second.", ephemeral=True)
                 return
 
-            selected_channel = self.channel.value  # Get selected channel
+            selected_channel = self.channel.values[0] if self.channel.values else None  # Get selected channel
             if not selected_channel:
                 await interaction.response.send_message("❌ Please select a valid channel.", ephemeral=True)
                 return
@@ -126,4 +133,4 @@ class Whisper(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Whisper(bot))
-    logger.info("Whisper cog loaded")
+    logger.info(f"Whisper cog loaded, version {__version__}")
