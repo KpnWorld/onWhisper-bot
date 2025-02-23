@@ -1,0 +1,48 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger the action when a tag starting with 'v' (e.g., v1.0.0) is pushed.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Python environment (for consistency, although it's not directly needed for releases)
+      - name: Set Up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # Step 3: Install dependencies (optional, depending on your needs)
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Step 4: Create release notes
+      - name: Create Release Notes
+        id: release-notes
+        run: |
+          echo "Release Notes: >" > release-notes.txt
+          git log --oneline ${{ github.event.before }}..${{ github.sha }} >> release-notes.txt
+
+      # Step 5: Create GitHub release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: bot.py  # Attach any files you want in the release (e.g., your bot code or artifacts)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Ensure this is set in your repository's secrets
+
+      # Step 6: Send a Discord notification about the release
+      - name: Notify Discord about the Release
+        run: |
+          curl -X POST -H "Content-Type: application/json" \
+          -d "{\"content\": \"🚀 New release created for onWhisper-bot! \nVersion: ${{ github.ref }} \nRelease Notes: \n$(cat release-notes.txt)\"}" \
+          ${{ secrets.DISCORD_WEBHOOK }}
