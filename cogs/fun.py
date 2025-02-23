@@ -4,6 +4,7 @@ from discord import app_commands
 import random
 import asyncio
 from datetime import timedelta
+import aiohttp  # Import aiohttp for making HTTP requests
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -57,105 +58,17 @@ class Fun(commands.Cog):
 
     @app_commands.command(name="joke", description="Tell a random joke.")
     async def joke(self, interaction: discord.Interaction):
-        jokes = [
-            "Why don't scientists trust atoms? Because they make up everything!",
-            "Why did the scarecrow win an award? Because he was outstanding in his field!",
-            "Why don't skeletons fight each other? They don't have the guts."
-        ]
-        joke = random.choice(jokes)
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://official-joke-api.appspot.com/random_joke") as response:
+                if response.status == 200:
+                    joke_data = await response.json()
+                    joke = f"{joke_data['setup']} - {joke_data['punchline']}"
+                else:
+                    joke = "❌ Failed to fetch a joke. Please try again later."
+
         embed = discord.Embed(title="Joke", description=f"😂 {interaction.user.mention}, here's a joke for you: {joke}", color=discord.Color.blue())
         await interaction.response.send_message(embed=embed)
 
-    # New whisper command
-    class WhisperModal(discord.ui.Modal, title="Whisper Message"):
-        def __init__(self, interaction: discord.Interaction):
-            super().__init__()
-            self.interaction = interaction
-
-            # Text input for the whisper message
-            self.message = discord.ui.TextInput(
-                label="Your message",
-                placeholder="Enter your whispered message...",
-                required=True,
-                max_length=200
-            )
-            self.add_item(self.message)
-
-            # Text input for the time duration
-            self.duration = discord.ui.TextInput(
-                label="Time (seconds)",
-                placeholder="Enter how long the message should last...",
-                required=True,
-                max_length=4
-            )
-            self.add_item(self.duration)
-
-            # Channel selection
-            self.channel = discord.ui.ChannelSelect(
-                label="Select Channel",
-                placeholder="Choose a channel to send the message...",
-                required=True,
-                channel_types=[discord.ChannelType.text]
-            )
-            self.add_item(self.channel)
-
-            # User mention input
-            self.mention = discord.ui.TextInput(
-                label="Mention User (optional)",
-                placeholder="Enter the user ID to mention...",
-                required=False,
-                max_length=20
-            )
-            self.add_item(self.mention)
-
-        async def on_submit(self, interaction: discord.Interaction):
-            whisper_message = self.message.value  # Get message input
-            try:
-                duration = int(self.duration.value)  # Get time input and convert to int
-                if duration <= 0:
-                    raise ValueError
-            except ValueError:
-                await interaction.response.send_message("❌ Please enter a valid positive number for the time.", ephemeral=True)
-                return
-
-            selected_channel = self.channel.value  # Get selected channel
-            if not selected_channel:
-                await interaction.response.send_message("❌ Please select a valid channel.", ephemeral=True)
-                return
-
-            mention_user = None
-            if self.mention.value:
-                try:
-                    mention_user = await self.interaction.guild.fetch_member(int(self.mention.value))
-                except Exception:
-                    await interaction.response.send_message("❌ Invalid user ID for mention.", ephemeral=True)
-                    return
-
-            embed = discord.Embed(
-                title="Whisper",
-                description=f"🗣 {interaction.user.mention} whispered: **{whisper_message}**",
-                color=discord.Color.purple()
-            )
-            
-            # Send the whisper message to the selected channel
-            if mention_user:
-                whispered_message = await selected_channel.send(content=mention_user.mention, embed=embed)
-            else:
-                whispered_message = await selected_channel.send(embed=embed)
-
-            # Confirm the message was sent
-            await interaction.response.send_message(f"Your whisper has been sent to {selected_channel.mention} and will be deleted in {duration} seconds.", ephemeral=True)
-
-            # Wait for the specified time before deleting
-            await asyncio.sleep(duration)
-            await whispered_message.delete()
-
-    @app_commands.command(name="whisper", description="Send a temporary whispered message.")
-    async def whisper(self, interaction: discord.Interaction):
-        """Opens a modal for the user to input a whisper message, time duration, and select a channel."""
-        await interaction.response.send_modal(self.WhisperModal(interaction))
-
-    # New countdown command
     @app_commands.command(name="countdown", description="Start a countdown timer.")
     async def countdown(self, interaction: discord.Interaction, seconds: int):
         if seconds < 1 or seconds > 3600:
@@ -168,5 +81,6 @@ class Fun(commands.Cog):
             await message.edit(content=f"⏳ {interaction.user.mention}, {i} seconds remaining...")
 
         await message.edit(content=f"🎉 {interaction.user.mention}, countdown has ended!")
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
