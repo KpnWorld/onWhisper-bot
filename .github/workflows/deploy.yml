@@ -3,7 +3,7 @@ name: Deploy Bot
 on:
   push:
     branches:
-      - main  # Runs when pushing to main
+      - main
 
 jobs:
   deploy:
@@ -21,22 +21,27 @@ jobs:
       - name: Create Virtual Environment
         run: |
           python -m venv venv
-          source venv/bin/activate  # Activate virtual environment
+          source venv/bin/activate
 
       - name: Install Dependencies
         run: |
           source venv/bin/activate
           pip install -r requirements.txt
 
+      - name: Stop Old Bot (Graceful Restart)
+        run: |
+          echo "Stopping old bot instance..."
+          pkill -f 'python bot.py' || true  # Kills the old bot process (if running)
+
       - name: Run Bot
         env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           OWNER_ID: ${{ secrets.OWNER_ID }}
         run: |
-          echo "Starting bot..."
+          echo "Starting new bot..."
           nohup python bot.py > bot.log 2>&1 &
-          sleep 5  # Give it a few seconds to start
-          tail -n 10 bot.log  # Display last 10 lines of the log to confirm bot is running
+          sleep 5  # Allow some time for the bot to start
+          tail -n 10 bot.log  # Check logs to confirm it's running
           echo "Bot has started."
 
       - name: Send Deployment Notification to Discord
@@ -53,4 +58,3 @@ jobs:
                -X POST \
                -d '{"username": "GitHub Actions", "content": "❌ **onWhisper-bot deployment failed!** Check logs for details."}' \
                ${{ secrets.DISCORD_WEBHOOK }}
-
