@@ -14,4 +14,4 @@ class Whisper(commands.Cog):
         await interaction.response.send_message("Whisper cog is working")
 
 async def setup(bot):
-    bot.add_cog(Whisper(bot))
+    await bot.add_cog(Whisper(bot))
