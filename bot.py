@@ -4,7 +4,13 @@ import os
 import asyncio
 import random
 import time
+import logging
+import signal
 from db.bot import init_db
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -14,13 +20,11 @@ intents.members = True
 
 # Set the bot owner's ID from environment variable
 owner_id = os.getenv("OWNER_ID")
-
 if owner_id is None:
-    print("❌ ERROR: OWNER_ID environment variable not set!")
+    logger.error("❌ ERROR: OWNER_ID environment variable not set!")
     exit(1)
-
 owner_id = int(owner_id)  # Ensure it's an integer
-print(f"✅ Owner ID (from env): {owner_id}")  # Debugging owner ID
+logger.info(f"✅ Owner ID (from env): {owner_id}")  # Debugging owner ID
 
 # Create bot instance
 bot = commands.Bot(command_prefix="!onWhisper ", intents=intents, owner_id=owner_id)
@@ -37,7 +41,7 @@ activities = [
 @tasks.loop(minutes=5)
 async def change_activity():
     new_activity = random.choice(activities)
-    print(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
+    logger.info(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
     await bot.change_presence(activity=new_activity)
 
 async def load_cogs():
@@ -45,40 +49,53 @@ async def load_cogs():
     try:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
-                print(f"🔄 Loading cog: {filename}")  # Debug log
+                logger.info(f"🔄 Loading cog: {filename}")  # Debug log
                 await bot.load_extension(f"cogs.{filename[:-3]}")
-        print("✅ All cogs loaded successfully!")
+        logger.info("✅ All cogs loaded successfully!")
     except Exception as e:
-        print(f"❌ Error loading cogs: {e}")
+        logger.error(f"❌ Error loading cogs: {e}")
+        raise
 
 @bot.event
 async def on_ready():
     """Event triggered when the bot is ready."""
-    init_db()  # Initialize the database
-    await load_cogs()  # Load cogs
-
-    print(f"✅ Logged in as {bot.user}")
-
-    await bot.change_presence(activity=random.choice(activities))  # Set initial presence
-
-    # Sync slash commands
-    start_time = time.time()
     try:
-        synced = await bot.tree.sync()
-        end_time = time.time()
-        print(f"✅ Slash commands synced: {len(synced)} commands in {end_time - start_time:.2f} seconds")
-    except Exception as e:
-        print(f"❌ Failed to sync commands: {e}")
+        init_db()  # Initialize the database
+        await load_cogs()  # Load cogs
 
-    # Start the activity loop if not running
-    if not change_activity.is_running():
-        change_activity.start()
+        logger.info(f"✅ Logged in as {bot.user}")
+
+        await bot.change_presence(activity=random.choice(activities))  # Set initial presence
+
+        # Sync slash commands
+        start_time = time.time()
+        try:
+            synced = await bot.tree.sync()
+            end_time = time.time()
+            logger.info(f"✅ Slash commands synced: {len(synced)} commands in {end_time - start_time:.2f} seconds")
+        except Exception as e:
+            logger.error(f"❌ Failed to sync commands: {e}")
+
+        # Start the activity loop if not running
+        if not change_activity.is_running():
+            change_activity.start()
+
+    except Exception as e:
+        logger.error(f"❌ Error during on_ready: {e}")
+
+# Graceful shutdown handling
+def shutdown_signal_handler(sig, frame):
+    logger.info("🛑 Shutdown signal received. Cleaning up and shutting down...")
+    asyncio.create_task(bot.close())
+
+signal.signal(signal.SIGTERM, shutdown_signal_handler)
+signal.signal(signal.SIGINT, shutdown_signal_handler)
 
 @bot.tree.command(name="check_cogs", description="Check which cogs are currently loaded")
 @discord.app_commands.checks.is_owner()
 async def check_cogs(interaction: discord.Interaction):
     """Slash command for the bot owner to check which cogs are loaded."""
-    print("✅ check_cogs command executed")  # Debug print
+    logger.info("✅ check_cogs command executed")  # Debug print
     cogs = [cog for cog in bot.cogs]
     embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
     await interaction.response.send_message(embed=embed)
@@ -91,14 +108,17 @@ async def list_commands(interaction: discord.Interaction):
 
 async def main():
     """Starts the bot."""
-    async with bot:
+    try:
         token = os.getenv("DISCORD_BOT_TOKEN")
         if token is None:
-            print("❌ ERROR: DISCORD_BOT_TOKEN environment variable not set!")
+            logger.error("❌ ERROR: DISCORD_BOT_TOKEN environment variable not set!")
             return
-        print("🚀 Starting bot...")
+        logger.info("🚀 Starting bot...")
         await bot.start(token)
+    except Exception as e:
+        logger.error(f"❌ Error starting the bot: {e}")
 
 if __name__ == "__main__":
-    print("🚀 Starting bot...")
+    logger.info("🚀 Starting bot...")
     asyncio.run(main())
+
