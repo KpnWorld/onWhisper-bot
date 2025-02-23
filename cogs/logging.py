@@ -64,20 +64,29 @@ class Logging(commands.Cog):
 
     async def log_message(self, guild_id, content):
         # Only send logs if a channel is set and logging is not paused
-        if not self.logging_paused:
-            channel_id = get_log_channel(guild_id)
-            if channel_id:
-                channel = self.bot.get_channel(channel_id)
-                if channel:
-                    # If content is an embed, send it directly; otherwise, wrap the string in an embed.
-                    if isinstance(content, discord.Embed):
-                        await channel.send(embed=content)
-                    else:
-                        embed = discord.Embed(
-                            description=content,
-                            color=discord.Color.blue()
-                        )
-                        await channel.send(embed=embed)
+        if self.logging_paused:
+            return
+        channel_id = get_log_channel(guild_id)
+        if not channel_id:
+            return  # If no log channel is set, don't log the message
+        
+        channel = self.bot.get_channel(channel_id)
+        if not channel:
+            print(f"❌ ERROR: Log channel not found (guild_id: {guild_id}, channel_id: {channel_id})")
+            return
+
+        # Check if bot has permission to send messages in the channel
+        permissions = channel.permissions_for(channel.guild.me)
+        if not permissions.send_messages:
+            print(f"❌ ERROR: Bot does not have permission to send messages in {channel.mention}.")
+            return
+
+        # Send log (embed if it's an embed, else a plain embed with content)
+        if isinstance(content, discord.Embed):
+            await channel.send(embed=content)
+        else:
+            embed = discord.Embed(description=content, color=discord.Color.blue())
+            await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_message_delete(self, message):
