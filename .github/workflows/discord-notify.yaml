@@ -13,10 +13,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Get latest commit message
+    - name: Get latest commit details
       run: |
         echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-    
+        echo "commit_author=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
+        echo "commit_hash=$(git log -1 --pretty=%h)" >> $GITHUB_ENV
+
     - name: Send Discord notification
       run: |
-        curl -X POST -H "Content-Type: application/json" -d "{\"content\": \"A change has been pushed to the bot on GitHub! Commit: ${{ env.commit_message }}\"}" ${{ secrets.DISCORD_WEBHOOK }}
+        curl -X POST -H "Content-Type: application/json" -d "{\"content\": \"A change has been pushed to the bot on GitHub! Commit: ${{ env.commit_message }} by ${{ env.commit_author }} (Hash: ${{ env.commit_hash }})\"}" ${{ secrets.DISCORD_WEBHOOK }}
