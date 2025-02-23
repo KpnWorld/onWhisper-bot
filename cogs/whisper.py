@@ -59,9 +59,19 @@ class Whisper(commands.Cog):
                 await interaction.response.send_message("❌ Please enter a valid positive number for the time.", ephemeral=True)
                 return
 
+            # Ensure duration is at least 1 second
+            if duration < 1:
+                await interaction.response.send_message("❌ The duration must be at least 1 second.", ephemeral=True)
+                return
+
             selected_channel = self.channel.value  # Get selected channel
             if not selected_channel:
                 await interaction.response.send_message("❌ Please select a valid channel.", ephemeral=True)
+                return
+
+            # Check if the bot has permission to send messages in the selected channel
+            if not selected_channel.permissions_for(interaction.guild.me).send_messages:
+                await interaction.response.send_message("❌ I do not have permission to send messages in the selected channel.", ephemeral=True)
                 return
 
             mention_user = None
@@ -73,12 +83,12 @@ class Whisper(commands.Cog):
                     return
 
             # Parse and replace @user mentions with proper user mentions
-            mention_pattern = re.compile(r'@(\w+)')
+            mention_pattern = re.compile(r'<@!?(\d+)>')  # Match @user or @user#1234
             matches = mention_pattern.findall(whisper_message)
             for match in matches:
-                member = discord.utils.get(interaction.guild.members, name=match)
+                member = discord.utils.get(interaction.guild.members, id=int(match))
                 if member:
-                    whisper_message = whisper_message.replace(f"@{match}", member.mention)
+                    whisper_message = whisper_message.replace(f"<@{match}>", member.mention)
 
             embed = discord.Embed(
                 title="Whisper",
@@ -87,17 +97,23 @@ class Whisper(commands.Cog):
             )
             
             # Send the whisper message to the selected channel
-            if mention_user:
-                whispered_message = await selected_channel.send(content=mention_user.mention, embed=embed)
-            else:
-                whispered_message = await selected_channel.send(embed=embed)
+            try:
+                if mention_user:
+                    whispered_message = await selected_channel.send(content=mention_user.mention, embed=embed)
+                else:
+                    whispered_message = await selected_channel.send(embed=embed)
 
-            # Confirm the message was sent
-            await interaction.response.send_message(f"Your whisper has been sent to {selected_channel.mention} and will be deleted in {duration} seconds.", ephemeral=True)
+                # Confirm the message was sent
+                await interaction.response.send_message(f"Your whisper has been sent to {selected_channel.mention} and will be deleted in {duration} seconds.", ephemeral=True)
 
-            # Wait for the specified time before deleting
-            await asyncio.sleep(duration)
-            await whispered_message.delete()
+                # Wait for the specified time before deleting
+                await asyncio.sleep(duration)
+                await whispered_message.delete()
+
+            except discord.Forbidden:
+                await interaction.response.send_message("❌ I do not have permission to send the whisper message.", ephemeral=True)
+            except discord.HTTPException as e:
+                await interaction.response.send_message(f"❌ An error occurred: {str(e)}", ephemeral=True)
 
     @app_commands.command(name="whisper", description="Send a temporary whispered message.")
     async def whisper(self, interaction: discord.Interaction):
