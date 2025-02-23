@@ -129,8 +129,13 @@ class Whisper(commands.Cog):
     @app_commands.command(name="whisper", description="Send a temporary whispered message.")
     async def whisper(self, interaction: discord.Interaction):
         """Opens a modal for the user to input a whisper message, time duration, and select a channel."""
-        await interaction.response.send_modal(self.WhisperModal(interaction))
+        try:
+            await interaction.response.send_modal(self.WhisperModal(interaction))
+        except Exception as e:
+            logger.exception("Failed to send modal: %s", e)
+            await interaction.response.send_message("An error occurred while opening the modal.", ephemeral=True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Whisper(bot))
     logger.info(f"Whisper cog loaded, version {__version__}")
+
