@@ -110,5 +110,14 @@ class Moderation(commands.Cog):
             embed.add_field(name=formatted_time, value=reason, inline=False)
         await interaction.response.send_message(embed=embed)
 
+    class Whisper(commands.Cog):
+        def __init__(self, bot):
+            self.bot = bot
+        
+        @app_commands.command(name="test", description="test if whisper cog is working")
+        async def test(self, interaction: discord.Interaction):
+            await interaction.response.send_message("Whisper cog is working")
+
+
 async def setup(bot):
     await bot.add_cog(Moderation(bot))
