@@ -82,6 +82,7 @@ async def check_cogs(interaction: discord.Interaction):
     """
     logger.info("check_cogs command executed")  # Debug print to verify command execution
     cogs = [cog for cog in bot.cogs]
+    logger.info(f"Loaded cogs: {cogs}")  # Debug log to verify loaded cogs
     embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
     await interaction.response.send_message(embed=embed)
 
