@@ -1,2 +1,30 @@
-# .gitignore
+# Ignore warnings data file
 warnings.json
+
+# Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment files
+.env
+.env.*
+
+# Log files
+*.log
+logs/
+
+# VSCode settings
+.vscode/
+
+# Node.js (Bun.js) dependencies
+node_modules/
+
+# Database files
+*.sqlite3
+db/
+
+# Temporary files
+*~
+*.bak
+*.swp
