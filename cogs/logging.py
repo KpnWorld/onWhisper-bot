@@ -1,18 +1,26 @@
 import discord
+import os
 from discord.ext import commands
 from discord import app_commands
 from db.bot import set_log_channel, get_log_channel
 
-# Set this to your desired owner user ID
-OWNER_ID = 895767962722660372  # Replace with the actual owner ID
+# Set the bot owner's ID from environment variable
+owner_id = os.getenv("OWNER_ID")
+
+if owner_id is None:
+    print("❌ ERROR: OWNER_ID environment variable not set!")
+    exit(1)
+
+owner_id = int(owner_id)  # Ensure it's an integer
+print(f"✅ Owner ID (from env): {owner_id}")  # Debugging owner ID
 
 def owner_check(ctx):
-    if ctx.author.id != OWNER_ID:
+    if ctx.author.id != owner_id:
         raise commands.CheckFailure("You are not authorized to use this command.")
     return True
 
 def slash_owner_check(interaction: discord.Interaction):
-    if interaction.user.id != OWNER_ID:
+    if interaction.user.id != owner_id:
         raise app_commands.CheckFailure("You are not authorized to use this command.")
     return True
 
