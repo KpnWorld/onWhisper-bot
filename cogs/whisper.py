@@ -136,6 +136,7 @@ class Whisper(commands.Cog):
             await interaction.response.send_message("An error occurred while opening the modal.", ephemeral=True)
 
 async def setup(bot: commands.Bot):
+    logger.debug("Attempting to load Whisper cog...")  # Debug log
     await bot.add_cog(Whisper(bot))
     logger.info(f"Whisper cog loaded, version {__version__}")
 
