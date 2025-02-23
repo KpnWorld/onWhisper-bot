@@ -4,6 +4,10 @@ from discord import app_commands
 import random
 import asyncio
 import aiohttp
+import logging
+
+# Set up logging for the Fun Cog
+logger = logging.getLogger(__name__)
 
 class Fun(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,7 +19,7 @@ class Fun(commands.Cog):
             rolls, limit = map(int, dice.lower().split('d'))
             if rolls <= 0 or limit <= 0:
                 raise ValueError  # Prevent negative or zero values
-        except Exception:
+        except ValueError:
             await interaction.response.send_message("❌ Format must be `NdN` (e.g., `2d6`).", ephemeral=True)
             return
 
@@ -71,6 +75,7 @@ class Fun(commands.Cog):
                     else:
                         joke = f"❌ Failed to fetch a joke. API error {response.status}."
         except Exception as e:
+            logger.error(f"❌ Error fetching joke: {e}")
             joke = f"❌ Error fetching joke: {e}"
 
         embed = discord.Embed(title="😂 Joke", description=f"{interaction.user.mention}, here's a joke for you: {joke}", color=discord.Color.blue())
@@ -95,3 +100,4 @@ class Fun(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Fun(bot))
+
