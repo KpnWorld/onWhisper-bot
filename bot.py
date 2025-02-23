@@ -10,18 +10,12 @@ from db.bot import init_db
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Enable necessary intents
-intents = discord.Intents.default()
-intents.messages = True
-intents.guilds = True
-intents.members = True
-
 # Set the bot owner's ID from environment variable
 owner_id = int(os.getenv("OWNER_ID"))  # Retrieve owner ID from environment variable
 logger.info(f"✅ Owner ID (from env): {owner_id}")
 
 # Create bot instance with owner_id
-bot = commands.Bot(command_prefix="!onWhisper ", intents=intents, owner_id=owner_id)
+bot = commands.Bot(command_prefix="?", intents=discord.Intents.all(),case_sensitive=True,help_command=None, owner_id=owner_id)
 
 # List of activities
 activities = [
