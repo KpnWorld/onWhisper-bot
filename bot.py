@@ -3,7 +3,12 @@ from discord.ext import commands, tasks
 import os
 import asyncio
 import random
+import logging
 from db.bot import init_db
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Enable necessary intents
 intents = discord.Intents.default()
@@ -13,6 +18,7 @@ intents.members = True
 
 # Set the bot owner's ID from environment variable
 owner_id = int(os.getenv("OWNER_ID"))  # Retrieve owner ID from environment variable
+logger.info(f"✅ Owner ID (from env): {owner_id}")
 
 # Create bot instance with owner_id
 bot = commands.Bot(command_prefix="!onWhisper ", intents=intents, owner_id=owner_id)
@@ -29,7 +35,7 @@ activities = [
 @tasks.loop(minutes=5)
 async def change_activity():
     new_activity = random.choice(activities)
-    print(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
+    logger.info(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
     await bot.change_presence(activity=new_activity)
 
 async def start_change_activity():
@@ -39,23 +45,25 @@ async def load_cogs():
     try:
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
+                logger.info(f"🔄 Loading cog: {filename}")  # Debug log
                 await bot.load_extension(f"cogs.{filename[:-3]}")
+        logger.info("✅ All cogs loaded successfully!")
     except Exception as e:
-        print(f"Error loading cogs: {e}")
+        logger.error(f"❌ Error loading cogs: {e}")
     init_db()  # Initialize the database (e.g., creating tables, setting up initial data)
 
 @bot.event
 async def on_ready():
     init_db()  # Initialize the database
     await load_cogs()  # Load cogs before syncing commands
-    print(f"✅ Logged in as {bot.user}")
+    logger.info(f"✅ Logged in as {bot.user}")
 
     await bot.change_presence(activity=random.choice(activities))  # Set initial presence
     try:
         synced = await bot.tree.sync()
-        print(f"Slash commands synced: {len(synced)} commands")
+        logger.info(f"Slash commands synced: {len(synced)} commands")
     except Exception as e:
-        print(f"Failed to sync command(s): {e}")
+        logger.error(f"Failed to sync command(s): {e}")
 
     if not change_activity.is_running():
         await start_change_activity()  # Start the loop only once
@@ -72,7 +80,7 @@ async def check_cogs(interaction: discord.Interaction):
     
     Usage: /check_cogs
     """
-    print("check_cogs command executed")  # Debug print to verify command execution
+    logger.info("check_cogs command executed")  # Debug print to verify command execution
     cogs = [cog for cog in bot.cogs]
     embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
     await interaction.response.send_message(embed=embed)
@@ -91,11 +99,12 @@ async def main():
     async with bot:
         token = os.getenv("DISCORD_BOT_TOKEN")
         if token is None:
-            print("Error: DISCORD_BOT_TOKEN environment variable not set.")
+            logger.error("Error: DISCORD_BOT_TOKEN environment variable not set.")
             return
+        logger.info("🚀 Starting bot...")
         await bot.start(token)
         await start_change_activity()  # Start the activity change loop
 
 if __name__ == "__main__":
-    print("Starting bot...")
+    logger.info("🚀 Starting bot...")
     asyncio.run(main())  # Properly start the bot asynchronously
