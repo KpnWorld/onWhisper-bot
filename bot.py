@@ -15,7 +15,8 @@ owner_id = int(os.getenv("OWNER_ID"))  # Retrieve owner ID from environment vari
 logger.info(f"✅ Owner ID (from env): {owner_id}")
 
 # Create bot instance with owner_id
-bot = commands.Bot(command_prefix="?", intents=discord.Intents.all(),case_sensitive=True,help_command=None, owner_id=owner_id)
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix="?", intents=intents, case_sensitive=True, help_command=None, owner_id=owner_id)
 
 # List of activities
 activities = [
@@ -36,14 +37,14 @@ async def start_change_activity():
     await bot.wait_until_ready()
 
 async def load_cogs():
-    try:
-        for filename in os.listdir("./cogs"):
-            if filename.endswith(".py"):
-                logger.info(f"🔄 Loading cog: {filename}")  # Debug log
-                await bot.load_extension(f"cogs.{filename[:-3]}")
-        logger.info("✅ All cogs loaded successfully!")
-    except Exception as e:
-        logger.error(f"❌ Error loading cogs: {e}")
+    cogs = [
+        "cogs.whisper",
+        "cogs.moderation",
+        "cogs.logging",
+        "cogs.fun",
+        # Add other cogs here
+    ]
+    await asyncio.gather(*[bot.load_extension(cog) for cog in cogs])
     init_db()  # Initialize the database (e.g., creating tables, setting up initial data)
 
 @bot.event
