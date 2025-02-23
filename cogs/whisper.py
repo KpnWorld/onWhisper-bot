@@ -3,6 +3,10 @@ from discord.ext import commands
 from discord import app_commands
 import asyncio
 import re  # Import regular expressions module
+import logging
+
+# Set up logging for the Whisper Cog
+logger = logging.getLogger(__name__)
 
 class Whisper(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -122,4 +126,4 @@ class Whisper(commands.Cog):
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Whisper(bot))
-    print("Whisper cog loaded")
+    logger.info("Whisper cog loaded")
