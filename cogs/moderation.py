@@ -111,9 +111,20 @@ class Moderation(commands.Cog):
             embed.add_field(name=formatted_time, value=reason, inline=False)
         await interaction.response.send_message(embed=embed)
 
-    @app_commands.command(name="test", description="test if whisper cog is working")
-    async def test(self, interaction: discord.Interaction):
-        await interaction.response.send_message("Whisper cog is working")
+    @app_commands.command(name="purge", description="Purges a specified amount of messages from a member.")
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def purge(self, interaction: discord.Interaction, member: discord.Member, amount: int):
+        def check(message):
+            return message.author == member
+
+        try:
+            deleted = await interaction.channel.purge(limit=amount, check=check)
+            embed = discord.Embed(title="Messages Purged", description=f"{len(deleted)} messages from {member.mention} have been purged.", color=discord.Color.blue())
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        except discord.Forbidden:
+            await interaction.response.send_message("❌ I do not have permission to delete messages in this channel.", ephemeral=True)
+        except discord.HTTPException as e:
+            await interaction.response.send_message(f"❌ Failed to delete messages: {str(e)}", ephemeral=True)
 
 
 async def setup(bot):
