@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
 import logging
-from db.bot import add_warning, get_warnings
 
 class Moderation(commands.Cog):
     def __init__(self, bot):
@@ -93,22 +92,13 @@ class Moderation(commands.Cog):
     @app_commands.command(name="warn", description="Warns a member.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def warn(self, interaction: discord.Interaction, member: discord.Member, reason: str):
-        try:
-            add_warning(member.id, interaction.guild.id, reason)
-            embed = discord.Embed(title="Member Warned", description=f"{member.mention} has been warned.", color=discord.Color.yellow())
-            embed.add_field(name="Reason", value=reason, inline=False)
-            await interaction.response.send_message(embed=embed)
-        except Exception as e:
-            await interaction.response.send_message(f"❌ Failed to warn member: {str(e)}", ephemeral=True)
+        embed = discord.Embed(title="Member Warned", description=f"{member.mention} has been warned.", color=discord.Color.yellow())
+        embed.add_field(name="Reason", value=reason, inline=False)
+        await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="warns", description="Displays the number of warnings a member has.")
     async def warns(self, interaction: discord.Interaction, member: discord.Member):
-        warnings = get_warnings(member.id, interaction.guild.id)
-        count = len(warnings)
-        embed = discord.Embed(title="Member Warnings", description=f"{member.mention} has {count} warnings.", color=discord.Color.yellow())
-        for reason, timestamp in warnings:
-            formatted_time = datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")  # Convert timestamp
-            embed.add_field(name=formatted_time, value=reason, inline=False)
+        embed = discord.Embed(title="Member Warnings", description=f"{member.mention} has warnings.", color=discord.Color.yellow())
         await interaction.response.send_message(embed=embed)
 
     @app_commands.command(name="purge", description="Purges a specified amount of messages from a member.")
@@ -125,7 +115,6 @@ class Moderation(commands.Cog):
             await interaction.response.send_message("❌ I do not have permission to delete messages in this channel.", ephemeral=True)
         except discord.HTTPException as e:
             await interaction.response.send_message(f"❌ Failed to delete messages: {str(e)}", ephemeral=True)
-
 
 async def setup(bot):
     await bot.add_cog(Moderation(bot))

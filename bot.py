@@ -4,7 +4,6 @@ import os
 import asyncio
 import random
 import logging
-from db.bot import init_db
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -45,11 +44,9 @@ async def load_cogs():
         # Add other cogs here
     ]
     await asyncio.gather(*[bot.load_extension(cog) for cog in cogs])
-    init_db()  # Initialize the database (e.g., creating tables, setting up initial data)
 
 @bot.event
 async def on_ready():
-    init_db()  # Initialize the database
     await load_cogs()  # Load cogs before syncing commands
     logger.info(f"✅ Logged in as {bot.user}")
 

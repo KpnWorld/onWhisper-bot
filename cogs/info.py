@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-from db.bot import init_db  
 import time
 import logging
 
@@ -61,9 +60,6 @@ class Info(commands.Cog):
         except Exception as e:
             logger.error(f"Error in about command: {e}")
             await interaction.response.send_message("❌ Something went wrong while fetching bot information.", ephemeral=True)
-
-async def setup(bot: commands.Bot):
-    await bot.add_cog(Info(bot))
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Info(bot))
