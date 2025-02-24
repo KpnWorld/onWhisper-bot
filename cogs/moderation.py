@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 from datetime import datetime
+import logging
 from db.bot import add_warning, get_warnings
 
 class Moderation(commands.Cog):
