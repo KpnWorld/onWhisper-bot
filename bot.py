@@ -1,21 +1,32 @@
+import os
+from dotenv import load_dotenv
 import discord
 from discord.ext import commands, tasks
-import os
 import asyncio
+import logging 
 import random
-import logging
 
-# Configure logging
+# Load environment variables from .env file
+load_dotenv()
+
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set the bot owner's ID from environment variable
-owner_id = int(os.getenv("OWNER_ID"))  # Retrieve owner ID from environment variable
-logger.info(f"✅ Owner ID (from env): {owner_id}")
+# Grab environment variables
+TOKEN = os.getenv("DISCORD_TOKEN")
+TEST_MODE = os.getenv("TEST_MODE", "true").lower() == "true"
+OWNER_ID = os.getenv("OWNER_ID")
+logger.info(f"✅ Determined Test mode: {TEST_MODE}")
+logger.info(f"✅ Grabbed Owner ID: {OWNER_ID}")
 
-# Create bot instance with owner_id
-intents = discord.Intents.default()
-bot = commands.Bot(command_prefix="?", intents=intents, case_sensitive=True, help_command=None, owner_id=owner_id)
+# Create Bot instance
+intents = discord.Intents.all()
+if OWNER_ID is not None:
+    owner_id = int(OWNER_ID)
+else:
+    owner_id = None
+bot = commands.Bot(command_prefix=".", intents=intents, owner_id=owner_id, help_command=None)
 
 # List of activities
 activities = [
@@ -25,79 +36,64 @@ activities = [
     discord.Game(name="Version 1.0.0 is coming soon!"),
 ]
 
-# Change activity periodically
 @tasks.loop(minutes=5)
 async def change_activity():
-    new_activity = random.choice(activities)
-    logger.info(f"🎮 Changing activity to: {new_activity.name}")  # Debug log
-    await bot.change_presence(activity=new_activity)
+    if TEST_MODE:
+        activity = discord.Game(name="Testing in progress...")
+    else:
+        activity = random.choice(activities)
+    logger.info(f"🎮 Changing activity to: {activity}")
+    await bot.change_presence(activity=activity)
 
-async def start_change_activity():
+@change_activity.before_loop
+async def before_change_activity():
     await bot.wait_until_ready()
 
-async def load_cogs():
-    cogs = [
-        "cogs.whisper",
-        "cogs.moderation",
-        "cogs.logging",
-        "cogs.fun",
-        # Add other cogs here
-    ]
-    await asyncio.gather(*[bot.load_extension(cog) for cog in cogs])
-
+# On Ready event
 @bot.event
 async def on_ready():
-    await load_cogs()  # Load cogs before syncing commands
-    logger.info(f"✅ Logged in as {bot.user}")
+    if TEST_MODE:
+        print("Running in TEST MODE!")
+        await bot.change_presence(activity=discord.Game(name="Testing in progress..."))
+    else:
+        await bot.change_presence(activity=discord.Game(name="Online!"))
 
-    await bot.change_presence(activity=random.choice(activities))  # Set initial presence
-    try:
-        synced = await bot.tree.sync()
-        logger.info(f"Slash commands synced: {len(synced)} commands")
-    except Exception as e:
-        logger.error(f"Failed to sync command(s): {e}")
+    change_activity.start()  # Start the activity loop when the bot is ready
+    print(f"Logged in as {bot.user}")
 
-    if not change_activity.is_running():
-        await start_change_activity()  # Start the loop only once
+@bot.event
+async def on_disconnect():
+    logger.warning("Bot has been disconnected!")
 
-# Custom owner check
-def is_owner(interaction: discord.Interaction) -> bool:
-    return interaction.user.id == owner_id
-
-@bot.tree.command(name="check_cogs", description="Check which cogs are currently loaded")
-@discord.app_commands.check(is_owner)
-async def check_cogs(interaction: discord.Interaction):
-    """
-    Slash command for the bot owner to check which cogs are currently loaded.
-    
-    Usage: /check_cogs
-    """
-    logger.info("check_cogs command executed")  # Debug print to verify command execution
-    cogs = [cog for cog in bot.cogs]
-    logger.info(f"Loaded cogs: {cogs}")  # Debug log to verify loaded cogs
-    embed = discord.Embed(title="Online Cogs", description=f"🟢 Online cogs: {', '.join(cogs)}", color=discord.Color.green())
-    await interaction.response.send_message(embed=embed)
-
-@bot.tree.command(name="list_commands", description="List all registered commands")
-async def list_commands(interaction: discord.Interaction):
-    """
-    Slash command to list all registered commands.
-    
-    Usage: /list_commands
-    """
-    commands = [command.name for command in bot.commands]
-    await interaction.response.send_message(f"Registered commands: {', '.join(commands)}")
+# Reconnect logic
+@tasks.loop(minutes=1)
+async def ensure_connection():
+    if bot.is_closed():
+        logger.warning("Bot is closed, attempting to reconnect...")
+        await bot.start(TOKEN)
 
 async def main():
     async with bot:
-        token = os.getenv("DISCORD_BOT_TOKEN")
-        if token is None:
-            logger.error("Error: DISCORD_BOT_TOKEN environment variable not set.")
-            return
-        logger.info("🚀 Starting bot...")
-        await bot.start(token)
-        await start_change_activity()  # Start the activity change loop
+        # Load cogs
+        for filename in os.listdir("./cogs"):
+            if filename.endswith(".py"):
+                extension = f"cogs.{filename[:-3]}"
+                if extension not in bot.extensions:
+                    await bot.load_extension(extension)
+
+        # Ensure the owner cog is loaded
+        if "cogs.owner" not in bot.extensions:
+            await bot.load_extension("cogs.owner")
+        
+        # Ensure the logs cog is loaded
+        if "cogs.logs" not in bot.extensions:
+            await bot.load_extension("cogs.logs")
+        
+        # Start the ensure_connection loop
+        ensure_connection.start()
+
+        # Run the bot with the token
+        await bot.start(TOKEN)
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting bot...")
-    asyncio.run(main())  # Properly start the bot asynchronously
+    asyncio.run(main())
