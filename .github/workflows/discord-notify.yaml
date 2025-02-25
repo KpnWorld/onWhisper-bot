@@ -1,24 +1,25 @@
-name: Discord Notify on Push
+name: Notify Discord of Changes
 
 on:
   push:
     branches:
-      - main  # This will trigger the action on pushes to the main branch.
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Get latest commit details
-      run: |
-        echo "commit_message=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
-        echo "commit_author=$(git log -1 --pretty=%an)" >> $GITHUB_ENV
-        echo "commit_hash=$(git log -1 --pretty=%h)" >> $GITHUB_ENV
-
-    - name: Send Discord notification
-      run: |
-        curl -X POST -H "Content-Type: application/json" -d "{\"content\": \"A change has been pushed to the bot on GitHub! Commit: ${{ env.commit_message }} by ${{ env.commit_author }} (Hash: ${{ env.commit_hash }})\"}" ${{ secrets.DISCORD_WEBHOOK }}
+      - name: Send notification to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -H "Content-Type: application/json" \
+          -X POST \
+          -d '{"content": "📢 A new change has been pushed to the bot repository! Check it out: https://github.com/KpnWorld/onWhisper-Bot/commits/main"}' \
+          "$DISCORD_WEBHOOK"
